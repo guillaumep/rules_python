@@ -101,6 +101,12 @@ parser.add_argument('--output', action='store',
 parser.add_argument('--directory', action='store',
                     help=('The directory into which to put .whl files.'))
 
+
+def sort_wheels(whls):
+  """Sorts a list of wheels deterministically."""
+  return sorted(whls, key=lambda w: w.distribution() + '_' + w.version())
+
+
 def determine_possible_extras(whls):
   """Determines the list of possible "extras" for each .whl
 
@@ -149,7 +155,7 @@ def determine_possible_extras(whls):
   return {
     whl: [
       extra
-      for extra in whl.extras()
+      for extra in sorted(whl.extras())
       if is_possible(whl.distribution(), extra)
     ]
     for whl in whls
@@ -170,7 +176,7 @@ def main():
         if fname.endswith('.whl'):
           yield os.path.join(root, fname)
 
-  whls = [Wheel(path) for path in list_whls()]
+  whls = sort_wheels(Wheel(path) for path in list_whls())
   possible_extras = determine_possible_extras(whls)
 
   def whl_library(wheel):

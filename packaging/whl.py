@@ -106,7 +106,7 @@ class Wheel(object):
         parts = re.split('[ ><=()]', entry)
         dependency_set.add(parts[0])
 
-    return dependency_set
+    return sorted(dependency_set)
 
   def extras(self):
     return self.metadata().get('extras', [])
@@ -127,7 +127,7 @@ class Wheel(object):
     metadata['name'] = pkg_info.get('Name')
     extras = pkg_info.get_all('Provides-Extra')
     if extras:
-      metadata['extras'] = list(set(extras))
+      metadata['extras'] = sorted(set(extras))
 
     reqs_dist = pkg_info.get_all('Requires-Dist') or []
     requires = collections.defaultdict(set)
@@ -148,9 +148,10 @@ class Wheel(object):
 
     if requires:
       metadata['run_requires'] = []
-      for key, value in requires.items():
+      for key in sorted(requires, key = lambda k: (k.condition or '', k.extra or '')):
+        values = requires[key]
         requirement = {
-          'requires': list(value)
+          'requires': sorted(values)
         }
         if key.extra:
           requirement['extra'] = key.extra
